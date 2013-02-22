@@ -18,10 +18,16 @@ _cli
 _cli.parse(process.argv);
 
 
-if (_cli.input) {
-    _mdown.batchProcess(_cli);
+if (_cli.input && _cli.output) {
+    processInputOutputFile();
 } else {
-    processStdIn();
+
+    if (_cli.input) {
+        _mdown.batchProcess(_cli);
+    } else {
+        processStdIn();
+    }
+
 }
 
 
@@ -44,4 +50,22 @@ function processStdIn(){
     });
 
     process.stdin.resume();
+}
+
+
+function processInputOutputFile() {
+    var fs = require('fs');
+    var buf = '';
+
+    var rs = fs.createReadStream(_cli.input,
+                                 {encoding: _cli.encoding})
+
+    rs.on('data', function(chunk) {
+        buf += chunk;
+    });
+
+    rs.on('end', function() {
+        var html = _mdown.toHTML(buf, _cli);
+        fs.writeFileSync(_cli.output, html, _cli.encoding);
+    });
 }
